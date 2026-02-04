@@ -26,7 +26,7 @@ This repository is intended as:
 
 In short: **the LLM can think freely, but it cannot act freely.**
 
----
+<img src="./docs/rbac_login.png" width="800" />
 
 ## LLM Access
 
@@ -91,7 +91,7 @@ This mirrors how **real internal tools** need to behave.
 
 All agent actions are logged for inspection.
 
----
+<img src="./docs/rbac_agent.png" width="800" />
 
 ## Tech Stack
 
