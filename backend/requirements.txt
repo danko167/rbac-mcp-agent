@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+python-jose[cryptography]
+passlib
+mcp
+openai
+requests
+python-dotenv
+tzdata

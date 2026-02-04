@@ -1,0 +1,330 @@
+.root {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 520px;
+}
+
+/* Left panel: subtle teal background + faint pattern-ish gradient */
+/* .left {
+  background: var(--mantine-color-teal-0);
+  position: relative;
+}
+
+.left::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+      900px 500px at 30% 20%,
+      rgba(32, 201, 151, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 500px at 70% 80%,
+      rgba(18, 184, 134, 0.14),
+      transparent 60%
+    );
+  pointer-events: none;
+} */
+
+
+
+.left {
+  background: #07130f; /* terminal-ish deep green/black */
+  position: relative;
+  overflow: hidden;
+}
+
+/* subtle vignette */
+.left::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(1200px 700px at 30% 20%, rgba(32, 201, 151, 0.20), transparent 55%),
+              radial-gradient(900px 600px at 80% 70%, rgba(18, 184, 134, 0.12), transparent 60%);
+  pointer-events: none;
+}
+
+/* Scanlines overlay */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 6px
+  );
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  animation: scanMove 8s linear infinite;
+}
+
+@keyframes scanMove {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(36px); }
+}
+
+/* Noise overlay (pure CSS) */
+.noise {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: 0.04;
+  pointer-events: none;
+  animation: noiseJitter 0.6s steps(2, end) infinite;
+}
+
+@keyframes noiseJitter {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-1px, 1px); }
+  50% { transform: translate(1px, -1px); }
+  75% { transform: translate(1px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Terminal window */
+.terminal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  width: min(560px, calc(100% - 48px));
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(8, 20, 15, 0.72);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+
+  /* fixed height window */
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* top bar like macOS window */
+.terminalTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.dotRed,
+.dotYellow,
+.dotGreen {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  opacity: 0.9;
+}
+
+.dotRed { background: #ff5f56; }
+.dotYellow { background: #ffbd2e; }
+.dotGreen { background: #27c93f; }
+
+.terminalTitle {
+  margin-left: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.2px;
+}
+
+/* body */
+.terminalBody {
+  margin: 0;
+  padding: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(235, 255, 246, 0.86);
+  white-space: pre-wrap;
+}
+
+/* little teal accent for prompts/ok lines */
+.terminalBody {
+  text-shadow: 0 0 14px rgba(32, 201, 151, 0.08);
+}
+
+/* Wrap that reveals the terminal output */
+.terminalBodyWrap {
+  position: relative;
+  overflow: hidden;
+
+  /* fill remaining height under top bar */
+  flex: 1;
+
+  /* reveal content by clipping, not by resizing */
+  clip-path: inset(0 0 100% 0);
+  animation: revealClip 2.6s steps(12, end) forwards;
+}
+
+
+/* A glowing caret line that moves down as text is revealed */
+.caretSweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  top: 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(32, 201, 151, 0.85),
+    transparent
+  );
+
+  opacity: 0.9;
+  pointer-events: none;
+
+  /* move down within the fixed body area */
+  animation: caretDown 2.6s steps(12, end) forwards;
+}
+
+@keyframes caretDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(220px);
+  }
+}
+
+
+@keyframes revealClip {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0% 0);
+  }
+}
+
+
+
+
+
+
+
+/* cursor blink */
+.cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: rgba(32, 201, 151, 0.95);
+  animation: blink 1s steps(1, end) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .scanlines,
+  .noise,
+  .cursor,
+  .terminalBodyWrap,
+  .caretSweep {
+    animation: none !important;
+  }
+
+  .terminalBodyWrap {
+    clip-path: none;
+  }
+
+  .caretSweep {
+    display: none;
+  }
+}
+
+
+/* Mobile: left is hidden in your existing responsive rules */
+@media (max-width: 62em) {
+  .terminal {
+    display: none;
+  }
+}
+
+
+
+/* Right panel: the "sheet" */
+.right {
+  background: var(--mantine-color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mantine-spacing-xl);
+
+  border-left: 1px solid var(--mantine-color-gray-3);
+  box-shadow: -12px 0 28px rgba(0, 0, 0, 0.1);
+}
+
+/* Card: slightly elevated but crisp */
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--mantine-color-white);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--mantine-color-gray-2);
+}
+
+/* Brand row / icon matching TopBar */
+.brandRow {
+  align-items: center;
+}
+
+
+.brandTitle {
+  line-height: 1.1;
+}
+
+.brandSubtitle {
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+/* Button with a bit more presence */
+.loginButton {
+  background: linear-gradient(
+    135deg,
+    var(--mantine-color-green-7),
+    var(--mantine-color-teal-6)
+  );
+}
+
+.loginButton:hover {
+  filter: brightness(1.02);
+}
+
+/* Error spacing */
+.errorText {
+  margin-top: 2px;
+}
+
+/* Responsive: collapse to single column */
+@media (max-width: 62em) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+
+  .left {
+    display: none;
+  }
+
+  .right {
+    border-left: none;
+    box-shadow: none;
+  }
+
+  .card {
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.08);
+  }
+}

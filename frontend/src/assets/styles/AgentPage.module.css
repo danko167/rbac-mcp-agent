@@ -1,0 +1,140 @@
+.root {
+  min-height: 100vh;
+  display: grid;
+  /* left narrow, right wide */
+  grid-template-columns: 420px 1fr;
+}
+
+/* keeps cards feeling consistent */
+.leftCard {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+}
+
+.error {
+  max-width: 220px;
+}
+
+.rightCard {
+  height: calc(100vh - 35px);
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.08);
+}
+
+/* nicer answer bubbles */
+.answerBubble,
+.userBubble {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 85%;
+  line-height: 1.4;
+  font-size: var(--mantine-font-size-sm);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.answerBubble::before,
+.answerBubble::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  width: 0;
+  height: 0;
+}
+
+/* Assistant (left) */
+.answerBubble {
+  background: var(--mantine-color-teal-0);
+  border: 1px solid var(--mantine-color-teal-2);
+  color: var(--mantine-color-gray-8);
+  border-top-left-radius: 0;
+  position: relative;
+}
+
+/* FILL triangle */
+.answerBubble::after {
+  top:0;
+  left:-7px;
+  border-top: 9px solid var(--mantine-color-teal-0);
+  border-right: 9px solid transparent;
+  transform: rotate(90deg);
+}
+
+/* BORDER triangle */
+.answerBubble::before {
+  left: -10px;
+  border-top: 10px solid var(--mantine-color-teal-2);
+  border-right: 10px solid transparent;
+  transform: rotate(90deg);
+}
+
+/* User (right) */
+.userBubble {
+   background: var(--mantine-color-teal-6);
+  border: 1px solid var(--mantine-color-teal-7);
+  color: var(--mantine-color-white);
+  border-top-right-radius: 0;
+  position: relative;
+}
+
+/* ---- Chat bubble tails (top corner notch) ---- */
+.userBubble::before,
+.userBubble::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  width: 0;
+  height: 0;
+}
+
+/* FILL triangle */
+.userBubble::after {
+  top:0;
+  right: -7px;
+  border-top: 9px solid var(--mantine-color-teal-6);
+  border-left: 9px solid transparent;
+  transform: rotate(-90deg);
+}
+
+/* BORDER triangle */
+.userBubble::before {
+  right: -10px;
+  border-top: 10px solid var(--mantine-color-teal-7);
+  border-left: 10px solid transparent;
+  transform: rotate(-90deg);
+}
+
+/* Empty state box */
+.emptyState {
+  flex: 1;
+  border: 1px dashed var(--mantine-color-teal-5);
+  border-radius: 14px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 75px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* Responsive: stack */
+@media (max-width: 62em) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+
+  .rightCard {
+    height: auto;
+    min-height: 50vh;
+  }
+}
+
+.chatScroll {
+  height: calc(100% - 30px); /* rightCard height minus header */
+  min-height: 0;
+  padding-right: 6px;
+}

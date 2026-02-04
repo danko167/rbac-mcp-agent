@@ -1,0 +1,48 @@
+.root {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 460px 1fr;
+}
+
+.left {
+  background: var(--mantine-color-gray-0);
+  border-right: 1px solid var(--mantine-color-gray-3);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right {
+  background: var(--mantine-color-teal-0);
+}
+
+
+.brand {
+  cursor: pointer;
+  transition: transform 140ms ease;
+}
+
+.brand:hover {
+  transform: scale(1.02);
+}
+
+.brandIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--mantine-color-green-7), var(--mantine-color-teal-4));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
+}
+
+@media (max-width: 62em) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+
+  .left {
+    border-right: none;
+    border-bottom: 1px solid var(--mantine-color-gray-3);
+  }
+}
