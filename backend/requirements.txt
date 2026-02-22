@@ -1,4 +1,5 @@
 fastapi
+fastmcp
 uvicorn[standard]
 sqlalchemy
 pydantic
@@ -9,3 +10,5 @@ openai
 requests
 python-dotenv
 tzdata
+psycopg2-binary
+alembic

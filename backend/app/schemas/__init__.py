@@ -1,4 +1,4 @@
-from .auth import TokenResponse, MeResponse,  LoginRequest
+from .auth import TokenResponse, MeResponse, LoginRequest, UpdateTimezoneRequest
 from .agent import (
     AgentRunRequest,
     AgentRunResponse,
@@ -8,10 +8,17 @@ from .agent import (
     AgentRunDetailResponse,
     AdminAgentRunListItem,
 )
+from .v2 import (
+    PermissionRequestCreate,
+    PermissionRequestDecision,
+    PermissionRequestItem,
+    NotificationItem,
+)
 
 __all__ = [
     "TokenResponse",
     "MeResponse",
+    "UpdateTimezoneRequest",
     "AgentRunRequest",
     "AgentRunResponse",
     "AgentRunListItem",
@@ -20,4 +27,8 @@ __all__ = [
     "AgentRunDetailResponse",
     "AdminAgentRunListItem",
     "LoginRequest",
+    "PermissionRequestCreate",
+    "PermissionRequestDecision",
+    "PermissionRequestItem",
+    "NotificationItem",
 ]

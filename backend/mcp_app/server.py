@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import logging
+from dotenv import load_dotenv
 
 from mcp.server.fastmcp import FastMCP
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
-from mcp_app.tools import auth, notes, tasks, weather
+from mcp_app.tools.registry import register_all_tools
+
+load_dotenv()
 
 settings = get_settings()
 configure_logging(settings.log_level)
@@ -16,10 +19,7 @@ logger = logging.getLogger("mcp_app.server")
 mcp = FastMCP("RBAC MCP Server", json_response=True)
 
 # Register tool modules
-auth.register(mcp)
-notes.register(mcp)
-tasks.register(mcp)
-weather.register(mcp)
+register_all_tools(mcp)
 
 # Run the MCP server
 if __name__ == "__main__":

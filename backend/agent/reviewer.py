@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 from openai import OpenAI
 from agent.responses_parse import extract_output_text
@@ -78,7 +78,14 @@ def should_run_reviewer(tool_results: List[Dict[str, Any]]) -> bool:
     return False
 
 
-def review_and_rewrite_final_answer(oai: OpenAI, *, model: str, final_text: str, evidence: str) -> str:
+def review_and_rewrite_final_answer(
+    oai: OpenAI,
+    *,
+    model: str,
+    final_text: str,
+    evidence: str,
+    on_response: Callable[[Any], None] | None = None,
+) -> str:
     """Use a reviewer model to rewrite the final answer based on evidence."""
     reviewer_system = (
         "You are a strict reviewer for an assistant that used tools.\n"
@@ -86,6 +93,10 @@ def review_and_rewrite_final_answer(oai: OpenAI, *, model: str, final_text: str,
         "Rules:\n"
         "- Do NOT add new facts not present in the evidence.\n"
         "- Do NOT claim an action succeeded unless evidence shows ok=true for the relevant tool.\n"
+        "- Do NOT claim an action failed unless evidence shows ok=false for the relevant action tool.\n"
+        "- If evidence shows ok=true for a mutation tool (e.g. *.create, *.update, *.delete, *.cancel, *.complete, *.decide, *.revoke, *.set), you MUST clearly state that the action was completed.\n"
+        "- When a mutation tool succeeded, do NOT ask the user whether they want to perform that same action.\n"
+        "- If only list/read tools ran, summarize current state from those results without inventing attempted mutations.\n"
         "- If evidence shows ok=false, explain politely.\n"
         "- Keep it concise.\n"
     )
@@ -105,5 +116,7 @@ def review_and_rewrite_final_answer(oai: OpenAI, *, model: str, final_text: str,
             {"role": "user", "content": reviewer_user},
         ],
     )
+    if on_response:
+        on_response(resp)
     rewritten = extract_output_text(resp).strip()
     return rewritten or final_text

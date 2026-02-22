@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { AuthContext, type Me } from "./AuthContext";
-import api, { setApiToken } from "../api/client";
+import { AuthContext } from "./AuthContext";
+import { setApiToken } from "../api/client";
+import { useAuthUser, useNotifications } from "./hooks";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -9,69 +10,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Read localStorage once on initial mount
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
 
-  const [me, setMe] = useState<Me | null>(null);
-  const [meLoading, setMeLoading] = useState(false);
-  const [meError, setMeError] = useState<string | null>(null);
+  const { me, meLoading, meError, timezone, refreshMe, setTimezone, clearUserState } = useAuthUser(token);
+  const { notifications, unreadCount, markNotificationRead, clearNotifications } = useNotifications(token);
 
   // If token read is synchronous, we're ready immediately
   const isReady = true;
-
-  const refreshMe = useCallback(async () => {
-    if (!token) {
-      setMe(null);
-      setMeError(null);
-      setMeLoading(false);
-      return;
-    }
-
-    setMeLoading(true);
-    setMeError(null);
-
-    try {
-      const res = await api.get<Me>("/me");
-      setMe(res.data);
-    } catch (e: unknown) {
-      const maybeErr = e as { response?: { data?: { detail?: string } } };
-      setMe(null);
-      setMeError(maybeErr?.response?.data?.detail ?? "Failed to load user info");
-    } finally {
-      setMeLoading(false);
-    }
-  }, [token]);
-
-  // Auto-refresh whenever token changes
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!token) {
-      setMe(null);
-      setMeError(null);
-      setMeLoading(false);
-      return;
-    }
-
-    void (async () => {
-      setMeLoading(true);
-      setMeError(null);
-
-      try {
-        const res = await api.get<Me>("/me");
-        if (cancelled) return;
-        setMe(res.data);
-      } catch (e: unknown) {
-        if (cancelled) return;
-        const maybeErr = e as { response?: { data?: { detail?: string } } };
-        setMe(null);
-        setMeError(maybeErr?.response?.data?.detail ?? "Failed to load user info");
-      } finally {
-        if (!cancelled) setMeLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
 
   const login = useCallback(
     (t: string) => {
@@ -87,11 +30,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("token");
     setApiToken(null);
     setToken(null);
-    setMe(null);
-    setMeError(null);
-    setMeLoading(false);
+    clearUserState();
+    clearNotifications();
     navigate("/login", { replace: true });
-  }, [navigate]);
+  }, [clearNotifications, clearUserState, navigate]);
 
   return (
     <AuthContext.Provider
@@ -101,7 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         me,
         meLoading,
         meError,
+        timezone,
         refreshMe,
+        setTimezone,
+        notifications,
+        unreadCount,
+        markNotificationRead,
         login,
         logout,
       }}

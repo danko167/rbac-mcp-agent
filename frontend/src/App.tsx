@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router";
 import LoginPage from "./pages/LoginPage";
 import AgentPage from "./pages/AgentPage";
 import TracesPage from "./pages/TracesPage";
-import AdminTracesPage from "./pages/AdminTracesPage";
+import AdminPage from "./pages/AdminPage";
 import { RequireAuth } from "./auth/RequireAuth";
 import AppLayout from "./layout/AppLayout";
 
@@ -20,7 +20,7 @@ export default function App() {
       >
         <Route index element={<AgentPage />} />
         <Route path="traces" element={<TracesPage />} />
-        <Route path="admin/traces" element={<AdminTracesPage />} />
+        <Route path="admin" element={<AdminPage />} />
       </Route>
     </Routes>
   );

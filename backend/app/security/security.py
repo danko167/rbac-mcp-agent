@@ -1,10 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from jose import jwt
 from passlib.context import CryptContext
-import os
+from app.core.config import get_settings
 
-SECRET = os.getenv("JWT_SECRET", "dev-secret")
 ALG = "HS256"
+
+_settings = get_settings()
+SECRET = _settings.jwt_secret
+TOKEN_EXP_HOURS = _settings.jwt_exp_hours
 
 pwd = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
@@ -23,7 +26,7 @@ def create_token(user_id: int) -> str:
         {
             "sub": str(user_id),
             "iat": int(now.timestamp()),
-            "exp": int((now + timedelta(hours=24)).timestamp()),
+            "exp": int((now + timedelta(hours=TOKEN_EXP_HOURS)).timestamp()),
         },
         SECRET,
         algorithm=ALG,

@@ -18,7 +18,9 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconAlertCircle, IconCheck, IconCopy } from "@tabler/icons-react";
-import api from "../api/client";
+import api from "../../api/client";
+import { useAuth } from "../../auth/useAuth";
+import { formatTimestampInTimezone } from "../../utils/timezone";
 
 type ToolCall = {
   tool: string;
@@ -30,9 +32,12 @@ type RunMeta = {
   id?: number;
   user_id?: number;
   prompt: string;
+  run_type?: "agent" | "api_action" | string;
+  action_name?: string | null;
   created_at?: string;
   status?: "ok" | "error" | string;
   error?: string | null;
+  specialist_key?: string | null;
   final_output?: string | null;
 };
 
@@ -60,13 +65,6 @@ function safePrettyJson(input: string): { ok: boolean; text: string } {
   }
 }
 
-function formatTimestamp(ts?: string): string {
-  if (!ts) return "";
-  const d = new Date(ts);
-  if (Number.isNaN(d.getTime())) return ts;
-  return d.toLocaleString();
-}
-
 export default function RunDetailsModal({
   opened,
   onClose,
@@ -74,6 +72,7 @@ export default function RunDetailsModal({
   buildUrl,
   title = "Run details",
 }: Props) {
+  const { timezone } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [data, setData] = useState<RunDetailsResponse | null>(null);
@@ -134,6 +133,12 @@ export default function RunDetailsModal({
 
   const status = runMeta?.status ?? "ok";
   const statusColor = status === "error" ? "red" : "teal";
+  const runType = runMeta?.run_type === "api_action" ? "API action" : "Agent";
+  const actionName = (runMeta?.action_name || "").trim();
+  const specialistLabel = runMeta?.run_type === "api_action"
+    ? "—"
+    : (runMeta?.specialist_key || "general");
+  const promptLabel = runMeta?.run_type === "api_action" ? "Action trace source" : "Prompt";
 
   return (
     <Modal
@@ -177,9 +182,23 @@ export default function RunDetailsModal({
                 {String(status).toUpperCase()}
               </Badge>
 
+              <Badge color={runMeta?.run_type === "api_action" ? "grape" : "blue"} variant="light">
+                {runType}
+              </Badge>
+
+              <Text size="sm" c="dimmed">
+                Specialist: {specialistLabel}
+              </Text>
+
+              {actionName ? (
+                <Text size="sm" c="dimmed">
+                  Action: {actionName}
+                </Text>
+              ) : null}
+
               {runMeta.created_at ? (
                 <Text size="sm" c="dimmed">
-                  {formatTimestamp(runMeta.created_at)}
+                  {formatTimestampInTimezone(runMeta.created_at, timezone)}
                 </Text>
               ) : null}
             </Group>
@@ -214,7 +233,7 @@ export default function RunDetailsModal({
           {/* Prompt */}
           <Box>
             <Text size="sm" fw={600} mb={6}>
-              Prompt
+              {promptLabel}
             </Text>
             <Paper withBorder radius="md" p="sm">
               <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
@@ -271,7 +290,7 @@ export default function RunDetailsModal({
               <Accordion variant="separated" radius="md">
                 {tools.map((t, idx) => {
                   const pretty = safePrettyJson(t.args);
-                  const ts = formatTimestamp(t.created_at);
+                  const ts = formatTimestampInTimezone(t.created_at, timezone);
 
                   return (
                     <Accordion.Item key={`${t.tool}-${idx}`} value={`${idx}`}>

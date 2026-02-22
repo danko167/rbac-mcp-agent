@@ -4,9 +4,23 @@ from sqlalchemy.orm import Session
 from app.db.models import AgentRun
 
 
-def create_agent_run(db: Session, *, user_id: int, prompt: str) -> int:
+def create_agent_run(
+    db: Session,
+    *,
+    user_id: int,
+    prompt: str,
+    conversation_id: int | None = None,
+    specialist_key: str | None = None,
+) -> int:
     """Create a new agent run record in the database."""
-    run = AgentRun(user_id=user_id, prompt=prompt, status="ok", error=None)
+    run = AgentRun(
+        user_id=user_id,
+        prompt=prompt,
+        status="ok",
+        error=None,
+        conversation_id=conversation_id,
+        specialist_key=specialist_key,
+    )
     db.add(run)
     db.commit()
     db.refresh(run)

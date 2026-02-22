@@ -48,6 +48,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    timezone: Mapped[str | None] = mapped_column(String, nullable=True)
 
     roles: Mapped[list["Role"]] = relationship("Role", secondary=user_roles)
 
@@ -72,6 +73,82 @@ class Permission(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+
+
+class PermissionGrant(Base):
+    """
+    User-specific permission grant (outside role membership).
+    """
+    __tablename__ = "permission_grants"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    permission_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    granted_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+
+class Delegation(Base):
+    """
+    Delegation from grantor(target owner) -> grantee(actor), scoped by permission_name.
+    """
+    __tablename__ = "delegations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    grantor_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    grantee_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    permission_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+
+class PermissionRequest(Base):
+    """
+    Request for either a direct user permission grant or a delegation.
+    """
+    __tablename__ = "permission_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    requester_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    request_kind: Mapped[str] = mapped_column(String, nullable=False)  # permission|delegation
+    permission_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    target_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String, default="pending", nullable=False)  # pending|approved|rejected
+    decision_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decided_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class Notification(Base):
+    """
+    Durable per-user notifications for SSE delivery and historical viewing.
+    """
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    payload: Mapped[str] = mapped_column(Text, nullable=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+
+class Alarm(Base):
+    """
+    Server-scheduled alarm.
+    """
+    __tablename__ = "alarms"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    creator_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    target_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    fire_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
+    fired_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    canceled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
 
 # --- Domain models ---
@@ -115,9 +192,11 @@ class AgentRun(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    conversation_id: Mapped[int | None] = mapped_column(ForeignKey("conversations.id"), nullable=True, index=True)
 
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
     final_output: Mapped[str | None] = mapped_column(Text, nullable=True)
+    specialist_key: Mapped[str | None] = mapped_column(String, nullable=True)
 
     status: Mapped[str] = mapped_column(String, default="ok", nullable=False)  # ok|error
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -131,6 +210,32 @@ class AgentRun(Base):
         back_populates="run",
         foreign_keys=lambda: [ToolAudit.agent_run_id],
         # keep it simple; don't do delete-orphan with nullable FK
+        cascade="save-update, merge",
+    )
+    conversation: Mapped["Conversation | None"] = relationship(
+        "Conversation",
+        back_populates="runs",
+        foreign_keys=[conversation_id],
+    )
+
+
+class Conversation(Base):
+    """
+    Conversation model grouping multiple agent runs into one chat thread.
+    """
+    __tablename__ = "conversations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String, nullable=False, default="default", index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False, index=True)
+
+    runs: Mapped[list["AgentRun"]] = relationship(
+        "AgentRun",
+        back_populates="conversation",
+        foreign_keys=lambda: [AgentRun.conversation_id],
         cascade="save-update, merge",
     )
 
@@ -160,3 +265,25 @@ class ToolAudit(Base):
         back_populates="tools",
         foreign_keys=[agent_run_id],
     )
+
+
+class TokenUsageEvent(Base):
+    """
+    Persistent token usage event for LLM and speech transcription calls.
+    """
+    __tablename__ = "token_usage_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    conversation_id: Mapped[int | None] = mapped_column(ForeignKey("conversations.id"), nullable=True, index=True)
+    agent_run_id: Mapped[int | None] = mapped_column(ForeignKey("agent_runs.id"), nullable=True, index=True)
+
+    event_type: Mapped[str] = mapped_column(String, nullable=False, index=True)  # llm|transcription
+    provider: Mapped[str] = mapped_column(String, nullable=False, default="openai")
+    model: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    input_tokens: Mapped[int] = mapped_column(nullable=False, default=0)
+    output_tokens: Mapped[int] = mapped_column(nullable=False, default=0)
+    total_tokens: Mapped[int] = mapped_column(nullable=False, default=0)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False, index=True)

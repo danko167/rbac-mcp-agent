@@ -10,14 +10,23 @@ from app.security.security import hash_password
 BASIC_PERMS = [
     "weather:read",
     "notes:list", "notes:create", "notes:update", "notes:delete",
+    "notifications:list",
+    "permissions:request",
+    "tasks:receive",
+    "alarms:receive",
 ]
 
 PRO_EXTRA_PERMS = [
     "tasks:list", "tasks:create", "tasks:update", "tasks:complete", "tasks:delete",
+    "tasks:create.for_others",
+    "notes:create.for_others",
+    "alarms:set",
+    "alarms:set.for_others",
 ]
 
 ADMIN_EXTRA_PERMS = [
     "agent:trace:view_all",
+    "permissions:approve",
 ]
 
 ROLE_TO_PERMS: dict[str, list[str]] = {

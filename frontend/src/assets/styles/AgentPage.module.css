@@ -12,18 +12,12 @@
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
 }
 
-.error {
-  max-width: 220px;
+.speechRow {
+  padding-top: 2px;
 }
 
-.rightCard {
-  height: calc(100vh - 35px);
-  display: flex;
-  flex-direction: column;
-
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.08);
+.error {
+  max-width: 100%;
 }
 
 /* nicer answer bubbles */
@@ -126,15 +120,4 @@
   .root {
     grid-template-columns: 1fr;
   }
-
-  .rightCard {
-    height: auto;
-    min-height: 50vh;
-  }
-}
-
-.chatScroll {
-  height: calc(100% - 30px); /* rightCard height minus header */
-  min-height: 0;
-  padding-right: 6px;
 }

@@ -16,13 +16,11 @@ import { IconRobot } from "@tabler/icons-react";
 import { AxiosError } from "axios";
 import { loginRequest } from "../api/auth";
 import { useAuth } from "../auth/useAuth";
-import { useNavigate } from "react-router";
 
 import classes from "../assets/styles/LoginPage.module.css";
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const nav = useNavigate();
 
   const [email, setEmail] = useState("alice@example.com");
   const [password, setPassword] = useState("password");
@@ -36,7 +34,6 @@ export default function LoginPage() {
     try {
       const data = await loginRequest({ email, password });
       login(data.access_token);
-      nav("/", { replace: true });
     } catch (err: unknown) {
       let message = "Login failed";
 

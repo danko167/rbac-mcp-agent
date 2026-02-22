@@ -1,6 +1,5 @@
-import type { AxiosResponse } from "axios";
-import api from "./client";
 import { endpoints } from "./endpoints";
+import { postData } from "./http";
 
 export type LoginRequest = {
   email: string;
@@ -12,9 +11,5 @@ export type LoginResponse = {
 };
 
 export async function loginRequest(body: LoginRequest) {
-  const res = await api.post<LoginResponse, AxiosResponse<LoginResponse>, LoginRequest>(
-    endpoints.auth.login,
-    body
-  );
-  return res.data;
+  return postData<LoginResponse, LoginRequest>(endpoints.auth.login, body);
 }

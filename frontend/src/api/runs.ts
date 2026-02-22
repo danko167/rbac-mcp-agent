@@ -1,13 +1,11 @@
-import api from "./client";
 import { endpoints } from "./endpoints";
 import type { AdminRun, UserRun } from "../types/runs";
+import { getData } from "./http";
 
 export async function fetchUserRuns() {
-  const res = await api.get<UserRun[]>(endpoints.agent.runs);
-  return res.data;
+  return getData<UserRun[]>(endpoints.agent.runs);
 }
 
 export async function fetchAdminRuns() {
-  const res = await api.get<AdminRun[]>(endpoints.admin.agentRuns);
-  return res.data;
+  return getData<AdminRun[]>(endpoints.admin.agentRuns);
 }
